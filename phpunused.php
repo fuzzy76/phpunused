@@ -29,21 +29,12 @@ function main()
     foreach ($filelist as $fullpath => $name) {
         $functionlist = array_merge($functionlist, get_functions($fullpath));
     }
-    var_dump($functionlist);
 
-    foreach ($functionlist as $key => $function)
-    {
-        if ($function['name']=='myfrickingunused') {
-            echo "XXXXXXX\n";
-        }
-        var_dump($function);
+    foreach ($functionlist as $function) {
         $matches = grep_get_matches(".", $function['name'], 'php');
-        if (count($matches) > 999) {
-            break;
+        if (count($matches) < 2) {
+            echo "Did not find reference to {$function['name']}\n";
         }
-        var_dump($matches);
-        exit;
-        echo "Did not find reference to {$function['name']}\n";
     }
 }
 
