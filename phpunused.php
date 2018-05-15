@@ -13,27 +13,30 @@
  */
 function main()
 {
-    $filelist = get_files(".", 'php');
-
     echo "Potential unreferenced files:\n";
+    // Get all files
+    $filelist = get_files(".", 'php');
+    // Grep for references
     foreach ($filelist as $fullpath => $name) {
-        $grep = grep_php_is_match(".", $name, 'php');
+        $grep = grep_is_match(".", $name, 'php');
         if (!$grep) {
-            echo "Did not find reference to {$fullpath}\n";
+            echo "Did not find reference to file '{$fullpath}'\n";
         }
     }
     echo "\n";
 
     echo "Potential unreferenced functions:\n";
+    // Build list of functions
     $functionlist = array();
     foreach ($filelist as $fullpath => $name) {
         $functionlist = array_merge($functionlist, get_functions($fullpath));
     }
-
+    // Grep for references
     foreach ($functionlist as $function) {
         $matches = grep_get_matches(".", $function['name'], 'php');
         if (count($matches) < 2) {
-            echo "Did not find reference to {$function['name']}\n";
+            echo "Did not find reference to function '{$function['name']}()' ";
+            echo "({$function['file']}:{$function['line']})\n";
         }
     }
 }
@@ -46,6 +49,8 @@ function main()
  *
  * @param string $directory  Directory to search
  * @param string $extensionfilter  File extension to filter on
+ *
+ * @return array Array of files keyed on full path to file
  */
 function get_files($directory, $extensionfilter = null)
 {
@@ -54,10 +59,13 @@ function get_files($directory, $extensionfilter = null)
         while (false !== ($entry = readdir($handle))) {
             $entry_fullpath = $directory.DIRECTORY_SEPARATOR . $entry;
             if (is_dir($entry_fullpath)) {
+                // Directories are recursed into
                 if ($entry !="." && $entry != "..") {
                     $filelist = array_merge($filelist, get_files($entry_fullpath, $extensionfilter));
                 }
-            } else {
+            }
+            if (is_file($entry_fullpath)) {
+                // Files are appended to array
                 if (empty($extensionfilter) || endsWith($entry, ".{$extensionfilter}")) {
                     $filelist[$entry_fullpath] = $entry;
                 }
@@ -75,13 +83,14 @@ function get_files($directory, $extensionfilter = null)
  *
  * @param string $directory Directory to search
  * @param string $needle String to search for
+ *
+ * @return bool Do any file contain the string?
  */
-function grep_php_is_match($directory, $needle, $extension = null)
+function grep_is_match($directory, $needle, $extension = null)
 {
     $output = array();
-    $return_var = null;
     $extensionfilter = ($extension ? "--include \\*.{$extension}" : "");
-    exec("grep -R -m 1 {$extensionfilter} \"{$needle}\" {$directory}", $output, $return_var);
+    exec("grep -R -m 1 {$extensionfilter} \"{$needle}\" {$directory}", $output);
     return (count($output) ? true : false);
 }
 
@@ -92,6 +101,8 @@ function grep_php_is_match($directory, $needle, $extension = null)
  *
  * @param string $directory Directory to search
  * @param string $needle String to search for
+ *
+ * @return array grep results, exploded into triplets of filename, linenumber, excerpt
  */
 function grep_get_matches($directory, $needle, $extension = null)
 {
@@ -99,6 +110,7 @@ function grep_get_matches($directory, $needle, $extension = null)
     $return_var = null;
     $extensionfilter = ($extension ? "--include \\*.{$extension}" : "");
     exec("grep -Rn {$extensionfilter} \"{$needle}\" {$directory}", $output, $return_var);
+    // Build output
     $out = array();
     foreach ($output as $outline) {
         $out[] = explode(":", $outline);
@@ -111,6 +123,8 @@ function grep_get_matches($directory, $needle, $extension = null)
  *
  * @param string $haystack The string to search within
  * @param string $needle The string to search for
+ *
+ * @return bool
  */
 function startsWith($haystack, $needle)
 {
@@ -120,9 +134,11 @@ function startsWith($haystack, $needle)
 
 /**
  * Checks if a string ends with another string
- * 
+ *
  * @param string $haystack The string to search within
  * @param string $needle The string to search for
+ *
+ * @return bool
  */
 function endsWith($haystack, $needle)
 {
@@ -134,6 +150,7 @@ function endsWith($haystack, $needle)
  * Get all functions in a PHP file
  *
  * @param string $file Name of file to parse
+ *
  * @return array an array of functions. Each functions is an array of filename, linenumber, functionname
  */
 function get_functions($file)
