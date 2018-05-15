@@ -1,12 +1,18 @@
 <?php
+
 /**
  * Find potential unreferenced PHP files in the code base.
  */
 
-main();
-
-function main() {
-
+/**
+ * Main function for program.
+ *
+ * @todo Should parse input. Directory parameter?
+ *
+ * @return void
+ */
+function main()
+{
     $filelist = get_files(".", 'php');
 
     echo "Potential unreferenced files:\n";
@@ -23,35 +29,35 @@ function main() {
     foreach ($filelist as $fullpath => $name) {
         $functionlist = array_merge($functionlist, get_functions($fullpath));
     }
-var_dump($functionlist);
-exit;
+    var_dump($functionlist);
 
-    foreach ($functionlist as $key => $function) {
+    foreach ($functionlist as $key => $function)
+    {
         if ($function['name']=='myfrickingunused') {
             echo "XXXXXXX\n";
         }
         var_dump($function);
         $matches = grep_get_matches(".", $function['name'], 'php');
-        if (count($matches) > 999)
+        if (count($matches) > 999) {
             break;
+        }
         var_dump($matches);
         exit;
         echo "Did not find reference to {$function['name']}\n";
     }
-
-
 }
 
 /**
  * Find all php files in code base
- * 
+ *
  * Does a simple recursive search filtering on file extensions. Returns an array
  * of file names keyed on full path to file.
- * 
+ *
  * @param string $directory  Directory to search
  * @param string $extensionfilter  File extension to filter on
  */
-function get_files($directory, $extensionfilter = NULL) {
+function get_files($directory, $extensionfilter = null)
+{
     $filelist = array();
     if ($handle = opendir($directory)) {
         while (false !== ($entry = readdir($handle))) {
@@ -73,31 +79,33 @@ function get_files($directory, $extensionfilter = NULL) {
 
 /**
  * Checks if any files contains a string
- * 
+ *
  * Filters files on extension. Uses exec().
- * 
+ *
  * @param string $directory Directory to search
  * @param string $needle String to search for
  */
-function grep_php_is_match($directory, $needle, $extension = NULL) {
+function grep_php_is_match($directory, $needle, $extension = null)
+{
     $output = array();
-    $return_var = NULL;
+    $return_var = null;
     $extensionfilter = ($extension ? "--include \\*.{$extension}" : "");
     exec("grep -R -m 1 {$extensionfilter} \"{$needle}\" {$directory}", $output, $return_var);
-    return (count($output) ? TRUE : FALSE);
+    return (count($output) ? true : false);
 }
 
 /**
  * Checks for files containing a string
- * 
+ *
  * Filters files on extension. Uses exec().
- * 
+ *
  * @param string $directory Directory to search
  * @param string $needle String to search for
  */
-function grep_get_matches($directory, $needle, $extension = NULL) {
+function grep_get_matches($directory, $needle, $extension = null)
+{
     $output = array();
-    $return_var = NULL;
+    $return_var = null;
     $extensionfilter = ($extension ? "--include \\*.{$extension}" : "");
     exec("grep -Rn {$extensionfilter} \"{$needle}\" {$directory}", $output, $return_var);
     $out = array();
@@ -109,11 +117,12 @@ function grep_get_matches($directory, $needle, $extension = NULL) {
 
 /**
  * Checks if a string starts with another string
- * 
+ *
  * @param string $haystack The string to search within
  * @param string $needle The string to search for
  */
-function startsWith($haystack, $needle) {
+function startsWith($haystack, $needle)
+{
      $length = strlen($needle);
      return (substr($haystack, 0, $length) === $needle);
 }
@@ -124,16 +133,24 @@ function startsWith($haystack, $needle) {
  * @param string $haystack The string to search within
  * @param string $needle The string to search for
  */
-function endsWith($haystack, $needle) {
+function endsWith($haystack, $needle)
+{
     $length = strlen($needle);
     return $length === 0 || (substr($haystack, -$length) === $needle);
 }
 
-function get_functions($file) {
+/**
+ * Get all functions in a PHP file
+ *
+ * @param string $file Name of file to parse
+ * @return array an array of functions. Each functions is an array of filename, linenumber, functionname
+ */
+function get_functions($file)
+{
     $functions = array();
     $tokens = token_get_all(file_get_contents($file));
     foreach ($tokens as $key => $token) {
-        if ( is_array($token) && $token[0] == T_FUNCTION &&
+        if (is_array($token) && $token[0] == T_FUNCTION &&
         isset($tokens[$key+1]) && is_array($tokens[$key+1]) && $tokens[$key+1][0] == T_WHITESPACE &&
         isset($tokens[$key+2]) && is_array($tokens[$key+2]) && $tokens[$key+2][0] == T_STRING
         ) {
@@ -142,3 +159,5 @@ function get_functions($file) {
     }
     return $functions;
 }
+
+main();
