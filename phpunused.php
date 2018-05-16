@@ -113,7 +113,10 @@ function grep_get_matches($directory, $needle, $extension = null)
     // Build output
     $out = array();
     foreach ($output as $outline) {
-        $out[] = explode(":", $outline);
+        $line = explode(":", $outline);
+        if (!preg_match('/^\s*\/\//i', $line[2])) {
+            $out[] = $line;
+        }
     }
     return $out;
 }
