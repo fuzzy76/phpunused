@@ -19,3 +19,9 @@ Run from the top directory of the project you want to check. Like so:
 
 This is a quick hack to help me analyze a code base. Pull requests are welcome,
 but apart from that, new features are unlikely.
+
+## Possible improvements
+
+* Find references in .js files (ajax calls and such)
+* Ignore function references in commented out lines
+
