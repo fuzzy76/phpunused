@@ -24,4 +24,4 @@ but apart from that, new features are unlikely.
 
 * Find references in .js files (ajax calls and such)
 * Ignore function references in commented out lines
-
+* Recognise prematurely ended functions (return/exit in front of code)
